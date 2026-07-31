@@ -1,122 +1,87 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import { SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
+import Dashboard from './pages/Dashboard';
+import Shipments from './pages/Shipments';
+import Tracking from './pages/Tracking';
+import { getShipments } from './services/neonService';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [shipments, setShipments] = useState([
+    { id: 'LOG-001', destination: 'Jakarta', status: 'Dalam Perjalanan', recipient: 'Budi Santoso' },
+    { id: 'LOG-002', destination: 'Bandung', status: 'Tiba di Gudang', recipient: 'Siti Rahma' },
+    { id: 'LOG-003', destination: 'Surabaya', status: 'Pending', recipient: 'Ahmad Dani' },
+  ]);
+
+  const fetchShipmentsData = async () => {
+    try {
+      const data = await getShipments();
+      if (data && data.length > 0) {
+        setShipments(data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat data dari Neon:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchShipmentsData();
+  }, []);
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+      {/* 1. TAMPILAN KETIKA USER BELUM LOGIN (Signed Out) */}
+      <SignedOut>
+        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+          <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl text-center">
+            <div className="text-4xl mb-4">📦</div>
+            <h1 className="text-2xl font-bold text-white mb-2">LogistikCloud System</h1>
+            <p className="text-slate-400 text-sm mb-6">
+              Silakan masuk menggunakan akun Anda untuk mengelola dan melacak pengiriman logistik secara real-time.
+            </p>
+            <SignInButton mode="modal">
+              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-colors shadow-lg shadow-blue-600/30">
+                Masuk / Daftar (Clerk Auth)
+              </button>
+            </SignInButton>
+            <div className="mt-6 text-xs text-slate-500">
+              Didukung oleh React, Tailwind, Neon, Clerk, & Cloudflare R2
+            </div>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </SignedOut>
 
-      <div className="ticks"></div>
+      {/* 2. TAMPILAN KETIKA USER SUDAH LOGIN (Signed In) */}
+      <SignedIn>
+        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800">
+          
+          {/* SIDEBAR */}
+          <Sidebar 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            isSidebarOpen={isSidebarOpen} 
+            setIsSidebarOpen={setIsSidebarOpen} 
+          />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* MAIN CONTENT WRAPPER */}
+          <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+            
+            {/* HEADER */}
+            <Header activeTab={activeTab} setIsSidebarOpen={setIsSidebarOpen} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+            {/* CONTENT AREA */}
+            <main className="p-4 md:p-8 flex-1 max-w-7xl w-full mx-auto">
+              {activeTab === 'dashboard' && <Dashboard shipments={shipments} />}
+              {activeTab === 'shipments' && <Shipments shipments={shipments} refreshData={fetchShipmentsData} />}
+              {activeTab === 'tracking' && <Tracking shipments={shipments} />}
+            </main>
+          </div>
+
+        </div>
+      </SignedIn>
     </>
-  )
+  );
 }
-
-export default App
